@@ -252,13 +252,53 @@ The admin login credentials were visible in the user table dump:
 
 With these credentials I was able to login to the site and view/access the following pages.
 
-![]()
+Everything appeared to be functionally the same from the admin standpoint outside of the new manage tab, in however it seemed primarily nonfunctional at this time. (I couldn't see the effect anywhere of any of the test forms I submitted)
+
+While potentially useful in future, not useful for now
+
+###### Home
+
+![adminview](images/screenshots/admin-site-home.png)
+
+###### Manage/Topic
+
+![adminview](images/screenshots/admin-site-topic.png)
+
+###### Manage/Topic - Insert
+
+![adminview](images/screenshots/admin-site-insert-topic.png)
+
+###### Manage/Subtopic
+
+![adminview](images/screenshots/admin-site-subtopic.png)
+
+###### Manage/Subtopic - Insert
+
+![adminview](images/screenshots/admin-site-insert-subtopic.png)
+
+###### Messages (And Everything Else)
+
+All appeared to be the same (eg, the foot banners etc)
+
+![adminview](images/screenshots/admin-messages.png)
 
 #### Chat Logs revealing pass
 
 ![apkpass](images/screenshots/mysql-dump-chat.png) (See)
 
-With this password I was able to extract that [apkfile from earlier](#)
+With this password I was able to extract that [apkfile from earlier](#apk-in-locked-zip). See [below](#reversing-the-apk) for more info.
+
+[![extractedapk](images/screenshots/extractedapk.png)](files/exfiled-files/anarf-signup-test.apk)
+[Can be found here](files/exfiled-files/anarf-signup-test.apk)
+
+## Reversing the APK
+
+
+
+
+
+
+
 
 
 
