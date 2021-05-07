@@ -335,12 +335,23 @@ In addition a GoBuster scan was run, which found the following 3 directories:
 
 ![c2buster](images/screenshots/C2buster.png)
 
+### Attempting to Find Access
 
+#### SSH Attempt(s)
 
+Tries using Bitnami's credentials, but needed an ssh key, may look to see if I can steal one from the public web server if cannot find way in.
 
+![sshattempt](images/screenshots/c2sshattempt.png)
 
+#### Temp Brief Overview of Other Things Just Too Tired To Write up RN
 
+Accessing the urls in the buster, reversing part of helper.prog
 
+Found some bits and pieces of strings suggesting passwods in the urls but can't make much sense of them
+
+Tried to do directory traversal through the url
+
+I can't think of much more I'm about to fall asleep. It didn't help my internet has been on/off all night >_<
 
 ## Delivery
 
