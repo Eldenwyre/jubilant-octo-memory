@@ -1,0 +1,14 @@
+Starting Nmap 7.80 ( https://nmap.org ) at 2021-05-06 02:47 UTC
+Nmap scan report for TARGETINFOREDACTED.amazonaws.com (TARGETIP)
+Host is up (0.10s latency).
+Not shown: 65530 filtered ports
+PORT     STATE  SERVICE        VERSION
+22/tcp   open   ssh            OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)
+80/tcp   open   http           Apache httpd 2.4.46 ((Unix) OpenSSL/1.1.1d)
+443/tcp  open   ssl/http       Apache httpd 2.4.46 ((Unix) OpenSSL/1.1.1d)
+3306/tcp closed mysql
+8888/tcp closed sun-answerbook
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 186.80 seconds

@@ -1,0 +1,10 @@
+username: maxmatterson
+fullname: Max Matterson
+password: haxattax
+email: mattersonmax@gmail.com
+gender: male
+date of birth: May 12 1994
+Image: SEE images/reference/max.png
+Address: 13406 Hollie Coves, Apt. 688, 39886-5105
+State: Colorado
+Country: United States
