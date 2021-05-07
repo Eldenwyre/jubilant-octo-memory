@@ -239,7 +239,7 @@ Dump ([can be found here](files/exfiled-files/max.txt)):
 
 ![mysqldump](images/screenshots/mysqldump.png)
 
-Used [a converter shell script](files/util-files/conver.sh) to convert the dump into a more [readable .sql format](files/max2.txt.sql).
+Used [a converter shell script](files/util-files/conver.sh) from [this](/questions/489277/script-to-convert-mysql-dump-sql-file-into-format-that-can-be-imported-into-sqli) to convert the dump into a more [readable .sql format](files/max2.txt.sql).
 
 When looking through the processed dump there were a few things that were noticed:
 
@@ -293,8 +293,47 @@ With this password I was able to extract that [apkfile from earlier](#apk-in-loc
 
 ## Reversing the APK
 
+### Attempting to Run in A Virtual Android Device
+
+After disconnecting the device from the internet, using android studio I attempted to run the apk after installing it with `adb install`; however, it would not function in the Nexus 5 device (using x86 most recent Android API version available)
+
+### Locating C2
+
+When using JADX to observe the extracted APK, noticed the following IP being hardcoded to fetch what appears to be busybox, which suggests this may be their C2 Server
+
+![potentialIP](images/screenshots/possibleC2IP.png)
+
+It's likely 3.1\*\*.\*\*4.\*\*0 is being used as (at least part of) C2
+
+### In-depth Reversal
+
+[Found here](#in-depth-reversal-of-apk)
+
+## Attempting to Gain Access on New C2
+
+### Recon 
+
+Conducting an nmap scan from our c2 resulted in the following: 
+
+First scan was blocked, but using -Pn on a second scan worked.
+
+![C2Nmap](images/screenshots/C2Nmap.png)
+
+1. Port 22/tcp:
+   1. Status: Open
+   2. Service: ssh   OpenSSH 8.2p1 Ubuntu 4ubuntu0.2 (Ubuntu Linux; protocol 2.0)
+2. Port 6932/tcp:
+   1. Status: Open
+   2. Service: http    Node.js Express framework
 
 
+In addition a GoBuster scan was run, which found the following 3 directories:
+
+1. info
+2. upload
+3. download
+
+![c2buster](images/screenshots/C2buster.png)
 
 
 
@@ -312,3 +351,7 @@ With this password I was able to extract that [apkfile from earlier](#apk-in-loc
 ## Command and Control
 
 ## Actions on Objective
+
+*******************
+
+# In Depth Reversal of APK
