@@ -347,7 +347,7 @@ Tries using Bitnami's credentials, but needed an ssh key, may look to see if I c
 
 Accessing the urls in the buster, reversing part of helper.prog
 
-Found some bits and pieces of strings suggesting passwods in the urls but can't make much sense of them
+Found some bits and pieces of strings suggesting passwords in the urls but can't make much sense of them, might be because of tiredness or just because I'm missing info not sure. 
 
 Tried to do directory traversal through the url
 
