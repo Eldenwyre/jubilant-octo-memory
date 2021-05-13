@@ -620,7 +620,10 @@ There was a [single csv](files/exfiled-files/stolen-information/us-500-implant-c
 
 Extracting this results in 3 preview jpgs, and an index folder and a Metadata folder. The index folder (and the subfolder within) contained a lot of .iwa files. 
 
-I could not figure how to open this. As of this moment
+~~I could not figure how to open this. As of this moment~~
+The file opens it's just not very useful what I'm seeing here
+
+![jumble](images/screenshots/stolen-info-jumble.png)
 
 
 ## Network Graph of Target
