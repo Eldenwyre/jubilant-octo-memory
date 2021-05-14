@@ -6,6 +6,10 @@
 
 SSH'd into the C2 Server to begin the mission. 
 
+Set up a simple JS staging server on it (not used). 
+
+Pre-setup any necessary tools for implant (not used)
+
 *****************************************
 
 ## Reconnaissance
@@ -625,10 +629,37 @@ The file opens it's just not very useful what I'm seeing here
 
 ![jumble](images/screenshots/stolen-info-jumble.png)
 
+## Attempting to Access the Other Boxes
+
+- 10.0.0.2: Didn't even know where to begin. 0 idea how to attack a domain server : )
+- 10.0.13.37: Tried SSHing with various credentials and keys available, no success
+- 10.0.55.59: Also tried SSHing with various credentials and keys available, no success
+
+With limited attack surface I couldn't think of much to try against these
+
 
 ## Network Graph of Target
 
 ![netgraph](images/screenshots/networkgraph.png)
+
+## Kill Chain Graph
+
+
+
+## Cleaning Up
+
+Cleaning up some evidence that would have been left behind. 
+
+- Cleared bash history wherever I could 
+- Removed the key with the minorly identifying miles@fail-not tag from C2
+- Removed any temp files I had used (such as the manage-key on C2 and the nmap files)
+- Cleared auth.log(.1) from the C2 and had done with webserver previously
+
+![authlog](images/screenshots/auth-log-exfil.png)
+
+## Target PII
+
+Mission failed （┬┬＿┬┬）
 
 *******************
 
