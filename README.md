@@ -295,6 +295,8 @@ With this password I was able to extract that [apkfile from earlier](#apk-in-loc
 [![extractedapk](images/screenshots/extractedapk.png)](files/exfiled-files/anarf-signup-test.apk)
 [Can be found here](files/exfiled-files/anarf-signup-test.apk)
 
+************
+
 ## Reversing the APK
 
 ### Attempting to Run in A Virtual Android Device
@@ -312,6 +314,8 @@ It's likely 3.1\*\*.\*\*4.\*\*0 is being used as (at least part of) C2
 ### In-depth Reversal
 
 [Found here](#in-depth-reversal-of-apk)
+
+*******
 
 ## Attempting to Gain Access on New C2
 
@@ -454,6 +458,8 @@ Couldn't scan all ports for some reason, would hang and not finish for hours. Re
 
 ![5554/24](images/screenshots/c25554subnet.png)
 
+******
+
 ## Telnet Thievery
 On the server, there was a script called `status-update.sh`
 
@@ -539,6 +545,8 @@ No output here but here's a snippet of the commands used.
 
 I then successfully ssh'd into the 10.0.55.42 box as ubuntu (the other boxes failed)
 
+*****
+
 ## Exploring the New Box (10.0.55.42)
 
 Interesting to note that this box has no direct connection to the internet, so any binaries or exfils will be done using scp since we have ssh access. Sadly it does not have nmap which is unfortunate. 
@@ -562,6 +570,8 @@ So, I'll get it to the box myself. To do this, I curl'd the same file from earli
 ##### Nmap scanning 10.0.13.37/24
 
 ![manage-nmap-1337](images/screenshots/manage-nmap-1377.png)
+
+*****
 
 ## Exploring 10.0.13.77 as jricho
 
@@ -593,6 +603,8 @@ Will attempt to reverse when done here or hitting a wall.
 #### Scanning Interfaces
 
 ![ipaddr](images/screenshots/1377-nmap.png)
+
+*******
 
 ## Reversing the Password Manager
 
@@ -629,22 +641,17 @@ The file opens it's just not very useful what I'm seeing here
 
 ![jumble](images/screenshots/stolen-info-jumble.png)
 
+******
+
 ## Attempting to Access the Other Boxes
 
 - 10.0.0.2: Didn't even know where to begin. 0 idea how to attack a domain server : )
 - 10.0.13.37: Tried SSHing with various credentials and keys available, no success
 - 10.0.55.59: Also tried SSHing with various credentials and keys available, no success
 
-With limited attack surface I couldn't think of much to try against these
+With limited attack surface I couldn't think of much to try against these, tried from any box I had access to. Potentially overlooked a simple mistake if access was achievable.
 
-
-## Network Graph of Target
-
-![netgraph](images/screenshots/networkgraph.png)
-
-## Kill Chain Graph
-
-
+*****
 
 ## Cleaning Up
 
@@ -657,10 +664,95 @@ Cleaning up some evidence that would have been left behind.
 
 ![authlog](images/screenshots/auth-log-exfil.png)
 
+*****
+# Deliverables Requested not Achieved by Above
+
+## Network Graph of Target
+
+![netgraph](images/screenshots/networkgraph.png)
+
+## Kill Chain Graph
+
+![kill](images/screenshots/killchain.png)
+
+## TTP 
+
+[Found here](https://github.com/eldenwyre/TTP)
+
 ## Target PII
 
-Mission failed （┬┬＿┬┬）
+[Mission failed](https://www.youtube.com/watch?v=9RAbYECBpVA) （┬┬＿┬┬）
+
 
 *******************
 
 # In Depth Reversal of APK
+
+## Reversed Materials
+
+- Reversed the apk package: `com.example.anarfsign_up`
+- Reversed to some degree: `helper.prog`
+- Reversed the shell script generated during helper.prog: `FileDropTest`
+
+## Manifest Analysis
+
+### APK Surface Level
+
+Faced with the screen below when launching the app. Pressing the generate sign up code crashes the application. The emulator does have a network connection. 
+
+![signup](images/reference/apkmainscreen.png)
+
+### Reversing the Main Portion of the APK
+
+![apkdiagram](images/reference/apkreversal.png)
+
+## Documented Hidden States
+
+### Helper.prog
+
+![helperrun](images/reference/helperrun.png)
+Would hang at the line above then eventually end execution after failing connection.
+
+Hard to tell due to the non functioning nature, but definitely generates FileDropTest and has it execute its contents
+
+Looking in ghidra revealed that it touches FileDropTest, creates it using echo, then executes it. As well as outputs what's seen above.
+
+However looking in ghidra also reveals 
+
+![c2comms](images/reference/c2commsinhelper.png)
+
+This leads to the belief that helper.prog is responsible for managing c2 communications to recieve commands.
+
+### FileDropTest
+
+Shell Script Generated when helper.prog is ran
+
+![filedroptest](images/reference/filedroptest.png)
+
+![filedroptestrev](images/reference/filedroptestreversal.png)
+
+## Usage
+
+While not absolutely certain, it appears to be an APK with the cover of gaining a signup code for "anarf"(whatever that is); however, the program will fetch a file from the c2 to establish a connection and fetch commandds from the c2 to run on system.
+
+## Tools Used
+
+### Ghidra
+
+Used for observing helper.prog
+
+### jadx-gui
+
+Used for reversing the APK
+
+### Android Studio
+
+Used for running the APK to observe behavior and retrieving the `FileDropTest` file
+
+As well as running helper.prog on its own in /data/local/tmp
+
+### Wireshark
+
+[See here](#running-with-wireshark)
+
+Upon rerunning helper.prog on its own, it would fail tcp handshakes and then refuse connection after a number of attempts
